@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Belly Button Biodiversity</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" />
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    
+    <div class="jumbotron text-center">
+      <h1>Belly Button Biodiversity</h1>
+      <h1>Dashboard</h1>
+      <p>Use the interactive charts below to explore the dataset</p>
+    </div>
+
+    <div class="row">
+      <div class="col-md-2">
+        <strong><p>SELECT Sample:</p></strong>
+        <select id="selDataset" onchange="optionChanged(this.value)"></select>
+        <br>
+        <br>
+        <strong><p>Sample MetaData</p></strong>
+        <br>
+        <div id="metadata"></div>
+      </div>
+      
+      <div class="col-md-6">
+        <div id="piechart"></div>
+      </div>
+      
+      <div class="col-md-4">
+
+      </div>
+    </div>
+    
+    <div class="row">
+      <div class="col-md-12">
+        <div id="bubblechart"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var dropdown_list = document.getElementById("selDataset");
+    
+    Plotly.d3.json('/names', function(error, response) {
+      if (error) return console.warn(error);
+      var names = response;
+
+      for (var i = 0; i<=names.length-1; i++){
+        var opt = document.createElement("option");
+        opt.value = names[i];
+        opt.innerHTML = names[i];
+        dropdown_list.appendChild(opt);
+      }
+    })
+
+    var default_url = '/samples/BB_940';
+    Plotly.d3.json(default_url, function(error, response) {
+      if (error) return console.warn(error);
+      var data = response;
+
+      var trace1 = {
+        values: response[0].sample_values.slice(0, 10),
+        labels: response[0].otu_ids.slice(0, 10),
+        type: 'pie'
+      };
+
+      var data1 = [trace1];
+
+      var layout1 = {
+        title: "Pie Chart"
+      };
+
+      Plotly.newPlot("piechart", data1, layout1);
+
+      const data2 = [{
+        x: response[0].otu_ids,
+        y: response[0].sample_values,
+        mode: "markers",
+        marker: {
+          color: response[0].otu_ids,
+          size: response[0].sample_values
+        }
+      }];
+
+      const layout2 = {
+        title: "Bubble Chart",
+        showlegend: false,
+        height: 500,
+        width: 1000
+      };
+
+      Plotly.newPlot("bubblechart", data2, layout2);
+
+    })
+
+    //var default_metadata = '/metadata/BB_940';
+    //Plotly.d3.json(default_metadata, function(error, response) {
+      //if (error) return console.warn(error);
+      //var data = response;
+      //console.log(data);
+      //var metadata_div = document.getElementById("metadata");
+      //var metadata_element = document.createElement("p");
+      //metadata_element.value = [data];
+      //metadata_element.innerHTML = [data];
+      //metadata_div.appendChild(metadata_element)
+
+    //})
+
+    function updatePlotly(newdata) {
+      var Pie = document.getElementById("piechart");
+      var Bubble = document.getElementById("bubblechart");
+
+      Plotly.restyle(Pie, 'values', [newdata[0].sample_values.slice(0, 10)])
+      Plotly.restyle(Pie, 'labels', [newdata[0].otu_ids.slice(0, 10)])
+
+      Plotly.restyle(Bubble, 'y', [newdata[0].sample_values])
+      Plotly.restyle(Bubble, 'x', [newdata[0].otu_ids])
+
+      Plotly.restyle(Bubble, 'marker.size', [newdata[0].sample_values])
+      Plotly.restyle(Bubble, 'marker.color', [newdata[0].otu_ids])
+    }
+
+
+    function optionChanged(sample) {
+      Plotly.d3.json(`/samples/${sample}`, function(error, data) {
+        console.log("newdata", data);
+        updatePlotly(data);
+      });
+    }
+
+  </script>
+</body>
+</html>
