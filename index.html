@@ -100,18 +100,21 @@
 
     })
 
-    //var default_metadata = '/metadata/BB_940';
-    //Plotly.d3.json(default_metadata, function(error, response) {
-      //if (error) return console.warn(error);
-      //var data = response;
-      //console.log(data);
-      //var metadata_div = document.getElementById("metadata");
-      //var metadata_element = document.createElement("p");
-      //metadata_element.value = [data];
-      //metadata_element.innerHTML = [data];
-      //metadata_div.appendChild(metadata_element)
+    var default_metadata = '/metadata/BB_940';
+    Plotly.d3.json(default_metadata, function(error, response) {
+      if (error) return console.warn(error);
+      var data = response;
+      var metadata_div = document.getElementById("metadata");
 
-    //})
+      for(key in data) {
+        tag = document.createElement("h6");
+        text = document.createTextNode(key + ': '+ data[key]);
+        tag.append(text);
+
+        metadata_div.appendChild(tag);
+      }
+
+    })
 
     function updatePlotly(newdata) {
       var Pie = document.getElementById("piechart");
@@ -127,11 +130,28 @@
       Plotly.restyle(Bubble, 'marker.color', [newdata[0].otu_ids])
     }
 
+    function updateMetadata(newdata) {
+      var metadata_div = document.getElementById("metadata");
+      metadata_div.innerHTML = "";
+
+      for(key in newdata) {
+        tag = document.createElement("h6");
+        text = document.createTextNode(key + ': '+ newdata[key]);
+        tag.append(text);
+
+        metadata_div.appendChild(tag);
+      }
+    }
 
     function optionChanged(sample) {
       Plotly.d3.json(`/samples/${sample}`, function(error, data) {
-        console.log("newdata", data);
+        console.log("newsampledata", data);
         updatePlotly(data);
+      });
+
+      Plotly.d3.json(`/metadata/${sample}`, function(error, data) {
+        console.log("newmetadata", data);
+        updateMetadata(data);
       });
     }
 
